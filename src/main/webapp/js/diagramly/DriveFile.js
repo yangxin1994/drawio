@@ -13,12 +13,6 @@ DriveFile = function(ui, data, desc)
 mxUtils.extend(DriveFile, DrawioFile);
 
 /**
- * Workaround for changing etag after save is higher autosave delay to allow
- * for preflight etag update and decrease possible conflicts on file save.
- */
-DriveFile.prototype.autosaveDelay = 2500;
-
-/**
  * Delay for last save in ms.
  */
 DriveFile.prototype.saveDelay = 0;
@@ -210,22 +204,29 @@ DriveFile.prototype.saveFile = function(title, revision, success, error, unloadi
 									}
 				
 									// Adaptive autosave delay
-									this.autosaveDelay = Math.min(8000,
-										Math.max(this.saveDelay + 500,
-										DriveFile.prototype.autosaveDelay));
+									this.autosaveDelay = Math.round(Math.min(10000,
+										Math.max(DriveFile.prototype.autosaveDelay,
+											this.saveDelay)));
 									this.desc = resp;
 									
 									// Shows possible errors but keeps the modified flag as the
 									// file was saved but the cache entry could not be written
-									this.fileSaved(savedData, lastDesc, mxUtils.bind(this, function()
+									if (token != null)
 									{
-										this.contentChanged();
-										
-										if (success != null)
+										this.fileSaved(savedData, lastDesc, mxUtils.bind(this, function()
 										{
-											success(resp);
-										}
-									}), error, token);
+											this.contentChanged();
+											
+											if (success != null)
+											{
+												success(resp);
+											}
+										}), error, token);
+									}
+									else if (success != null)
+									{
+										success(resp);
+									}
 								}
 								else if (error != null)
 								{
@@ -319,18 +320,6 @@ DriveFile.prototype.saveFile = function(title, revision, success, error, unloadi
 				});
 				
 				doSave(overwrite, revision);				
-			}), mxUtils.bind(this, function(e)
-			{
-				this.savingFile = false;
-				
-				if (error != null)
-				{
-					error(e);
-				}
-				else
-				{
-					throw e;
-				}
 			}));
 		}
 	}
@@ -479,6 +468,17 @@ DriveFile.prototype.move = function(folderId, success, error)
 			success(resp);
 		}
 	}), error);
+};
+
+/**
+ * Translates this point by the given vector.
+ * 
+ * @param {number} dx X-coordinate of the translation.
+ * @param {number} dy Y-coordinate of the translation.
+ */
+DriveFile.prototype.share = function()
+{
+	this.ui.drive.showPermissions(this.getId());
 };
 
 /**
@@ -697,10 +697,10 @@ DriveFile.prototype.loadPatchDescriptor = function(success, error)
  */
 DriveFile.prototype.patchDescriptor = function(desc, patch)
 {
-	DrawioFile.prototype.patchDescriptor.apply(this, arguments);
-	
 	desc.headRevisionId = patch.headRevisionId;
 	desc.modifiedDate = patch.modifiedDate;
+	
+	DrawioFile.prototype.patchDescriptor.apply(this, arguments);
 };
 
 /**

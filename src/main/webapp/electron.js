@@ -1,4 +1,5 @@
 const fs = require('fs')
+const os = require('os');
 const path = require('path')
 const url = require('url')
 const electron = require('electron')
@@ -12,6 +13,7 @@ const zlib = require('zlib');
 const log = require('electron-log')
 const program = require('commander')
 const {autoUpdater} = require("electron-updater")
+const PDFDocument = require('pdf-lib').PDFDocument;
 const Store = require('electron-store');
 const store = new Store();
 const ProgressBar = require('electron-progressbar');
@@ -29,6 +31,39 @@ let cmdQPressed = false
 let firstWinLoaded = false
 let firstWinFilePath = null
 
+//Read config file
+var queryObj = {
+	'dev': __DEV__ ? 1 : 0,
+	'test': __DEV__ ? 1 : 0,
+	'gapi': 0,
+	'db': 0,
+	'od': 0,
+	'gh': 0,
+	'gl': 0,
+	'tr': 0,
+	'browser': 0,
+	'picker': 0,
+	'mode': 'device',
+	'export': 'https://convert.diagrams.net/node/export'
+};
+
+try
+{
+	if (fs.existsSync(process.cwd() + '/urlParams.json'))
+	{
+		let urlParams = JSON.parse(fs.readFileSync(process.cwd() + '/urlParams.json'));
+		
+		for (var param in urlParams)
+		{
+			queryObj[param] = urlParams[param];
+		}
+	}
+}
+catch(e)
+{
+	console.log('Error in urlParams.json file: ' + e.message);
+}
+
 function createWindow (opt = {})
 {
 	let options = Object.assign(
@@ -41,7 +76,9 @@ function createWindow (opt = {})
 			// preload: path.resolve('./preload.js'),
 			nodeIntegration: true,
 			enableRemoteModule: true,
-			nodeIntegrationInWorker: true
+			nodeIntegrationInWorker: true,
+			spellcheck: (os.platform() == "darwin" ? true : false),
+			contextIsolation: false
 		}
 	}, opt)
 
@@ -57,21 +94,7 @@ function createWindow (opt = {})
 	{
 		pathname: `${__dirname}/index.html`,
 		protocol: 'file:',
-		query:
-		{
-			'dev': __DEV__ ? 1 : 0,
-			'test': __DEV__ ? 1 : 0,
-			'gapi': 0,
-			'db': 0,
-			'od': 0,
-			'gh': 0,
-			'gl': 0,
-			'tr': 0,
-			'browser': 0,
-			'picker': 0,
-			'mode': 'device',
-			'export': 'https://exp.draw.io/ImageExport4/export'
-		},
+		query: queryObj,
 		slashes: true
 	})
 	
@@ -188,7 +211,7 @@ app.on('ready', e =>
         argv.unshift(null)
     }
 
-	var validFormatRegExp = /^(pdf|svg|png|jpeg|jpg|vsdx)$/;
+	var validFormatRegExp = /^(pdf|svg|png|jpeg|jpg|vsdx|xml)$/;
 	
 	function argsRange(val) 
 	{
@@ -207,14 +230,14 @@ app.on('ready', e =>
 	        .option('-r, --recursive', 'for a folder input, recursively convert all files in sub-folders also')
 	        .option('-o, --output <output file/folder>', 'specify the output file/folder. If omitted, the input file name is used for output with the specified format as extension')
 	        .option('-f, --format <format>',
-			    'if output file name extension is specified, this option is ignored (file type is determined from output extension, possible export formats are pdf, png, jpg, svg, vsdx)',
+			    'if output file name extension is specified, this option is ignored (file type is determined from output extension, possible export formats are pdf, png, jpg, svg, vsdx, and xml)',
 			    validFormatRegExp, 'pdf')
 			.option('-q, --quality <quality>',
 				'output image quality for JPEG (default: 90)', parseInt)
 			.option('-t, --transparent',
 				'set transparent background for PNG')
 			.option('-e, --embed-diagram',
-				'includes a copy of the diagram (for PNG format only)')
+				'includes a copy of the diagram (for PNG and PDF formats only)')
 			.option('-b, --border <border>',
 				'sets the border width around the diagram (default: 0)', parseInt)
 			.option('-s, --scale <scale>',
@@ -231,6 +254,8 @@ app.on('ready', e =>
 				'selects a specific page, if not specified and the format is an image, the first page is selected', parseInt)
 			.option('-g, --page-range <from>..<to>',
 				'selects a page range (for PDF format only)', argsRange)
+			.option('-u, --uncompressed',
+				'Uncompressed XML output (for XML format only)')
 	        .parse(argv)
 	}
 	catch(e)
@@ -239,11 +264,17 @@ app.on('ready', e =>
 		return;
 	}
 	
+	var options = program.opts();
+	
     //Start export mode?
-    if (program.export)
+    if (options.export)
 	{
     	var dummyWin = new BrowserWindow({
-			show : false
+			show : false,
+			webPreferences: {
+				nodeIntegration: true,
+				contextIsolation: false
+			}
 		});
     	
     	windowsRegistry.push(dummyWin);
@@ -255,11 +286,11 @@ app.on('ready', e =>
 	    	var outType = null;
 	    	
 	    	//Format & Output
-	    	if (program.output)
+	    	if (options.output)
 			{
 	    		try
 	    		{
-	    			var outStat = fs.statSync(program.output);
+	    			var outStat = fs.statSync(options.output);
 	    			
 	    			if (outStat.isDirectory())
 					{
@@ -274,7 +305,7 @@ app.on('ready', e =>
 	    		{
 	    			outType = {isFile: true};
 	    			
-	    			format = path.extname(program.output).substr(1);
+	    			format = path.extname(options.output).substr(1);
 					
 					if (!validFormatRegExp.test(format))
 					{
@@ -285,33 +316,34 @@ app.on('ready', e =>
 	    	
 	    	if (format == null)
 			{
-	    		format = program.format;
+	    		format = options.format;
 			}
 	    	
 	    	var from = null, to = null;
 	    	
-	    	if (program.pageIndex != null && program.pageIndex >= 0)
+	    	if (options.pageIndex != null && options.pageIndex >= 0)
 			{
-	    		from = program.pageIndex;
+	    		from = options.pageIndex;
 			}
-	    	else if (program.pageRage && program.pageRage.length == 2)
+	    	else if (options.pageRage && options.pageRage.length == 2)
 			{
-	    		from = program.pageRage[0] >= 0 ? program.pageRage[0] : null;
-	    		to = program.pageRage[1] >= 0 ? program.pageRage[1] : null;
+	    		from = options.pageRage[0] >= 0 ? options.pageRage[0] : null;
+	    		to = options.pageRage[1] >= 0 ? options.pageRage[1] : null;
 			}
-	    	
+
 			var expArgs = {
 				format: format,
-				w: program.width > 0 ? program.width : null,
-				h: program.height > 0 ? program.height : null,
-				border: program.border > 0 ? program.border : 0,
-				bg: program.transparent ? 'none' : '#ffffff',
+				w: options.width > 0 ? options.width : null,
+				h: options.height > 0 ? options.height : null,
+				border: options.border > 0 ? options.border : 0,
+				bg: options.transparent ? 'none' : '#ffffff',
 				from: from,
 				to: to,
-				allPages: format == 'pdf' && program.allPages,
-				scale: (program.crop && program.scale == null) ? 1.00001: (program.scale || 1), //any value other than 1 crops the pdf
-				embedXml: program.embedDiagram? '1' : '0',
-				jpegQuality: program.quality
+				allPages: format == 'pdf' && options.allPages,
+				scale: (options.crop && (options.scale == null || options.scale == 1)) ? 1.00001: (options.scale || 1), //any value other than 1 crops the pdf
+				embedXml: options.embedDiagram? '1' : '0',
+				jpegQuality: options.quality,
+				uncompressed: options.uncompressed
 			};
 
 			var paths = program.args;
@@ -356,7 +388,7 @@ app.on('ready', e =>
 				}
 				else if (inStat.isDirectory())
 				{
-					addDirectoryFiles(paths[0], program.recursive);
+					addDirectoryFiles(paths[0], options.recursive);
 				}
 
 				if (files.length > 0)
@@ -371,113 +403,138 @@ app.on('ready', e =>
 						{
 							var ext = path.extname(curFile);
 							
-							expArgs.xml = fs.readFileSync(curFile, ext === '.png'? null : 'utf-8');
+							expArgs.xml = fs.readFileSync(curFile, ext === '.png' || ext === '.vsdx' ? null : 'utf-8');
 							
 							if (ext === '.png')
 							{
 								expArgs.xml = Buffer.from(expArgs.xml).toString('base64');
+								startExport();
+							}
+							else if (ext === '.vsdx')
+							{
+								dummyWin.loadURL(`file://${__dirname}/vsdxImporter.html`);
+								
+								const contents = dummyWin.webContents;
+
+								contents.on('did-finish-load', function()
+							    {
+									contents.send('import', expArgs.xml);
+
+									ipcMain.once('import-success', function(evt, xml)
+						    	    {
+										expArgs.xml = xml;
+										startExport();
+						    	    });
+						    	    
+						    	    ipcMain.once('import-error', function()
+						    	    {
+						    	    	console.error('Error: cannot import VSDX file: ' + curFile);
+						    	    	next();
+						    	    });
+							    });
+							}
+							else
+							{
+								startExport();
 							}
 							
-							var mockEvent = {
-								reply: function(msg, data)
+							function next()
+							{
+								fileIndex++;
+								
+								if (fileIndex < files.length)
 								{
-									try
+									processOneFile();
+								}
+								else
+								{
+									cmdQPressed = true;
+									dummyWin.destroy();
+								}
+							};
+							
+							function startExport()
+							{
+								var mockEvent = {
+									reply: function(msg, data)
 									{
-										if (data == null || data.length == 0)
+										try
 										{
-											console.error('Error: Export failed: ' + curFile);
-										}
-										else if (msg == 'export-success')
-										{
-											var outFileName = null;
-											
-											if (outType != null)
+											if (data == null || data.length == 0)
 											{
-												if (outType.isDir)
-												{
-													outFileName = path.join(program.output, path.basename(curFile)) + '.' + format;
-												}
-												else
-												{
-													outFileName = program.output;
-												}
+												console.error('Error: Export failed: ' + curFile);
 											}
-											else if (inStat.isFile())
+											else if (msg == 'export-success')
 											{
-												outFileName = path.join(path.dirname(paths[0]), path.basename(paths[0],
-													path.extname(paths[0]))) + '.' + format;
+												var outFileName = null;
 												
-											}
-											else //dir
-											{
-												outFileName = path.join(path.dirname(curFile), path.basename(curFile,
-													path.extname(curFile))) + '.' + format;
-											}
-											
-											try
-											{
-												var counter = 0;
-												var realFileName = outFileName;
-												
-												if (program.rawArgs.indexOf('-k') > -1 || program.rawArgs.indexOf('--check') > -1)
+												if (outType != null)
 												{
-													while (fs.existsSync(realFileName))
+													if (outType.isDir)
 													{
-														counter++;
-														realFileName = path.join(path.dirname(outFileName), path.basename(outFileName,
-															path.extname(outFileName))) + '-' + counter + path.extname(outFileName);
+														outFileName = path.join(options.output, path.basename(curFile)) + '.' + format;
+													}
+													else
+													{
+														outFileName = options.output;
 													}
 												}
+												else if (inStat.isFile())
+												{
+													outFileName = path.join(path.dirname(paths[0]), path.basename(paths[0],
+														path.extname(paths[0]))) + '.' + format;
+													
+												}
+												else //dir
+												{
+													outFileName = path.join(path.dirname(curFile), path.basename(curFile,
+														path.extname(curFile))) + '.' + format;
+												}
 												
-												fs.writeFileSync(realFileName, data, format == 'vsdx'? 'base64' : null, { flag: 'wx' });
-												console.log(curFile + ' -> ' + outFileName);
+												try
+												{
+													var counter = 0;
+													var realFileName = outFileName;
+													
+													if (program.rawArgs.indexOf('-k') > -1 || program.rawArgs.indexOf('--check') > -1)
+													{
+														while (fs.existsSync(realFileName))
+														{
+															counter++;
+															realFileName = path.join(path.dirname(outFileName), path.basename(outFileName,
+																path.extname(outFileName))) + '-' + counter + path.extname(outFileName);
+														}
+													}
+													
+													fs.writeFileSync(realFileName, data, format == 'vsdx'? 'base64' : null, { flag: 'wx' });
+													console.log(curFile + ' -> ' + outFileName);
+												}
+												catch(e)
+												{
+													console.error('Error writing to file: ' + outFileName);
+												}
 											}
-											catch(e)
+											else
 											{
-												console.error('Error writing to file: ' + outFileName);
+												console.error('Error: ' + data + ': ' + curFile);
 											}
+											
+											next();
 										}
-										else
+										finally
 										{
-											console.error('Error: ' + data + ': ' + curFile);
+											mockEvent.finalize();
 										}
-										
-										fileIndex++;
-										
-										if (fileIndex < files.length)
-										{
-											processOneFile();
-										}
-										else
-										{
-											cmdQPressed = true;
-											dummyWin.destroy();
-										}
-									}
-									finally
-									{
-										mockEvent.finalize();
-									}
-						    	}
+							    	}
+								};
+
+								exportDiagram(mockEvent, expArgs, true);
 							};
-					    	
-							exportDiagram(mockEvent, expArgs, true);
 						}
 						catch(e)
 						{
 							console.error('Error reading file: ' + curFile);
-							
-							fileIndex++;
-							
-							if (fileIndex < files.length)
-							{	
-								processOneFile();
-							}
-							else
-							{
-								cmdQPressed = true;
-								dummyWin.destroy();
-							}
+							next();
 						}
 					}
 					
@@ -520,11 +577,15 @@ app.on('ready', e =>
     	app.on('second-instance', (event, commandLine, workingDirectory) => {
     		//Create another window
     		let win = createWindow()
-    	    
-    	    win.webContents.on('did-finish-load', function()
-    	    {
-    	    	ipcMain.once('app-load-finished', (evt, data) =>
-    			{
+
+			let loadEvtCount = 0;
+			
+			function loadFinished()
+			{
+				loadEvtCount++;
+				
+				if (loadEvtCount == 2)
+				{
 	    	    	//Open the file if new app request is from opening a file
 	    	    	var potFile = commandLine.pop();
 	    	    	
@@ -532,16 +593,41 @@ app.on('ready', e =>
 	    	    	{
 	    	    		win.webContents.send('args-obj', {args: [potFile]});
 	    	    	}
-    			});
-    			
+				}
+			}
+			
+			//Order of these two events is not guaranteed, so wait for them async.
+			//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	    	ipcMain.once('app-load-finished', loadFinished);
+    	    
+    	    win.webContents.on('did-finish-load', function()
+    	    {    			
     	        win.webContents.zoomFactor = 1;
     	        win.webContents.setVisualZoomLevelLimits(1, 1);
+				loadFinished();
     	    });
     	})
     }
 
     let win = createWindow()
     
+	let loadEvtCount = 0;
+			
+	function loadFinished()
+	{
+		loadEvtCount++;
+		
+		if (loadEvtCount == 2)
+		{
+			//Sending entire program is not allowed in Electron 9 as it is not native JS object
+			win.webContents.send('args-obj', {args: program.args, create: options.create});
+		}
+	}
+	
+	//Order of these two events is not guaranteed, so wait for them async.
+	//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	ipcMain.once('app-load-finished', loadFinished);
+
     win.webContents.on('did-finish-load', function()
     {
     	if (firstWinFilePath != null)
@@ -558,14 +644,9 @@ app.on('ready', e =>
     	
     	firstWinLoaded = true;
     	
-    	ipcMain.once('app-load-finished', (evt, data) =>
-		{
-			//Sending entire program is not allowed in Electron 9 as it is not native JS object
-			win.webContents.send('args-obj', {args: program.args, create: program.create});
-		});
-    	
         win.webContents.zoomFactor = 1;
         win.webContents.setVisualZoomLevelLimits(1, 1);
+		loadFinished();
     });
 	
     let updateNoAvailAdded = false;
@@ -727,15 +808,27 @@ app.on('will-finish-launching', function()
 	    {
 		    let win = createWindow();
 		    
+			let loadEvtCount = 0;
+			
+			function loadFinished()
+			{
+				loadEvtCount++;
+				
+				if (loadEvtCount == 2)
+				{
+	    	    	win.webContents.send('args-obj', {args: [path]});
+				}
+			}
+			
+			//Order of these two events is not guaranteed, so wait for them async.
+			//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	    	ipcMain.once('app-load-finished', loadFinished);
+    	    
 		    win.webContents.on('did-finish-load', function()
 		    {
-		    	ipcMain.once('app-load-finished', (evt, data) =>
-		    	{
-		    		win.webContents.send('args-obj', {args: [path]});
-		    	});
-		    	
 		        win.webContents.zoomFactor = 1;
 		        win.webContents.setVisualZoomLevelLimits(1, 1);
+				loadFinished();
 		    });
 	    }
 	    else
@@ -766,17 +859,12 @@ autoUpdater.on('update-available', (a, b) =>
 			
 			var progressBar = new ProgressBar({
 				title: 'draw.io Update',
-			    text: 'Downloading draw.io update...',
-				browserWindow: {
-					webPreferences: {
-						nodeIntegration: true
-					}
-				}
+			    text: 'Downloading draw.io update...'
 			});
 			
 			function reportUpdateError(e)
 			{
-				progressBar.detail = 'Error occured while fetching updates. ' + e
+				progressBar.detail = 'Error occured while fetching updates. ' + (e && e.message? e.message : e)
 				progressBar._window.setClosable(true);
 			}
 
@@ -799,6 +887,13 @@ autoUpdater.on('update-available', (a, b) =>
 				//On mac, download-progress event is not called, so the indeterminate progress will continue until download is finished
 				log.info('@update-progress@\n', d);
 				
+				var percent = d.percent;
+				
+				if (percent)
+				{
+					percent = Math.round(percent * 100)/100;
+				}
+				
 				if (firstTimeProg)
 				{
 					firstTimeProg = false;
@@ -808,13 +903,8 @@ autoUpdater.on('update-available', (a, b) =>
 						indeterminate: false,
 						title: 'draw.io Update',
 						text: 'Downloading draw.io update...',
-						detail: `${d.percent}% ...`,
-						initialValue: d.percent,
-						browserWindow: {
-							webPreferences: {
-								nodeIntegration: true
-							}
-						}
+						detail: `${percent}% ...`,
+						initialValue: percent
 					});
 				
 					progressBar
@@ -829,12 +919,12 @@ autoUpdater.on('update-available', (a, b) =>
 							})
 							.on('ready', function() {
 								//InitialValue doesn't set the UI! so this is needed to render it correctly
-								progressBar.value = d.percent;
+								progressBar.value = percent;
 							});
 				}
 				else 
 				{
-					progressBar.value = d.percent;
+					progressBar.value = percent;
 				}
 			});
 
@@ -1017,9 +1107,13 @@ function exportVsdx(event, args, directFinalize)
 		show : false
 	});
 
-    win.webContents.on('did-finish-load', function()
-    {
-    	ipcMain.once('app-load-finished', (evt, data) =>
+	let loadEvtCount = 0;
+			
+	function loadFinished()
+	{
+		loadEvtCount++;
+		
+		if (loadEvtCount == 2)
 		{
 	    	win.webContents.send('export-vsdx', args);
 	    	
@@ -1057,9 +1151,52 @@ function exportVsdx(event, args, directFinalize)
 					event.reply('export-success', data);
 				}
 			});
-		});
-    });
+		}
+	}
+	
+	//Order of these two events is not guaranteed, so wait for them async.
+	//TOOD There is still a chance we catch another window 'app-load-finished' if user created multiple windows quickly 
+	ipcMain.once('app-load-finished', loadFinished);
+    win.webContents.on('did-finish-load', loadFinished);
 };
+
+async function mergePdfs(pdfFiles, xml)
+{
+	//Pass throgh single files
+	if (pdfFiles.length == 1 && xml == null)
+	{
+		return pdfFiles[0];
+	}
+
+	try 
+	{
+		const pdfDoc = await PDFDocument.create();
+		pdfDoc.setCreator('diagrams.net');
+
+		if (xml != null)
+		{	
+			//Embed diagram XML as file attachment
+			await pdfDoc.attach(Buffer.from(xml).toString('base64'), 'diagram.xml', {
+				mimeType: 'application/vnd.jgraph.mxfile',
+				description: 'Diagram Content'
+			  });
+		}
+
+		for (var i = 0; i < pdfFiles.length; i++)
+		{
+			const pdfFile = await PDFDocument.load(pdfFiles[i].buffer);
+			const pages = await pdfDoc.copyPages(pdfFile, pdfFile.getPageIndices());
+			pages.forEach(p => pdfDoc.addPage(p));
+		}
+
+		const pdfBytes = await pdfDoc.save();
+        return Buffer.from(pdfBytes);
+    }
+	catch(e)
+	{
+        throw new Error('Error during PDF combination: ' + e.message);
+    }
+}
 
 //TODO Use canvas to export images if math is not used to speedup export (no capturePage). Requires change to export3.html also
 function exportDiagram(event, args, directFinalize)
@@ -1077,7 +1214,8 @@ function exportDiagram(event, args, directFinalize)
 		browser = new BrowserWindow({
 			webPreferences: {
 				backgroundThrottling: false,
-				nodeIntegration: true
+				nodeIntegration: true,
+				contextIsolation: false
 			},
 			show : false,
 			frame: false,
@@ -1089,13 +1227,50 @@ function exportDiagram(event, args, directFinalize)
 		browser.loadURL(`file://${__dirname}/export3.html`);
 
 		const contents = browser.webContents;
+		var pageByPage = (args.format == 'pdf' && !args.print), from, pdfs;
 
+		if (pageByPage)
+		{
+			from = args.allPages? 0 : parseInt(args.from || 0);
+			to = args.allPages? 1000 : parseInt(args.to || 1000) + 1; //The 'to' will be corrected later
+			pdfs = [];
+
+			args.from = from;
+			args.to = from;
+			args.allPages = false;
+		}
+			
 		contents.on('did-finish-load', function()
 	    {
-			ipcMain.once('render-finished', (evt, bounds) =>
+			//Set finalize here since it is call in the reply below
+			function finalize()
 			{
+				browser.destroy();
+			};
+			
+			if (directFinalize === true)
+			{
+				event.finalize = finalize;
+			}
+			else
+			{
+				//Destroy the window after response being received by caller
+				ipcMain.once('export-finalize', finalize);
+			}
+
+			function renderingFinishHandler(evt, renderInfo)
+			{
+				var pageCount = renderInfo.pageCount, bounds = null;
 				//For some reason, Electron 9 doesn't send this object as is without stringifying. Usually when variable is external to function own scope
-				bounds = JSON.parse(bounds.bounds);
+				try
+				{
+					bounds = JSON.parse(renderInfo.bounds);
+				}
+				catch(e)
+				{
+					bounds = null;
+				}
+				
 				var pdfOptions = {pageSize: 'A4'};
 				var hasError = false;
 				
@@ -1127,22 +1302,6 @@ function exportDiagram(event, args, directFinalize)
 				
 				var base64encoded = args.base64 == '1';
 				
-				//Set finalize here since it is call in the reply below
-				function finalize()
-				{
-					browser.destroy();
-				};
-				
-				if (directFinalize === true)
-				{
-					event.finalize = finalize;
-				}
-				else
-				{
-					//Destroy the window after response being received by caller
-					ipcMain.once('export-finalize', finalize);
-				}
-				
 				if (hasError)
 				{
 					event.reply('export-error');
@@ -1160,6 +1319,20 @@ function exportDiagram(event, args, directFinalize)
 						browser.capturePage().then(function(img)
 						{
 							//Image is double the given bounds, so resize is needed!
+							var tScale = 1;
+
+							//If user defined width and/or height, enforce it precisely here. Height override width
+							if (args.h)
+							{
+								tScale = args.h / newBounds.height;
+							}
+							else if (args.w)
+							{
+								tScale = args.w / newBounds.width;
+							}
+							
+							newBounds.width *= tScale;
+							newBounds.height *= tScale;
 							img = img.resize(newBounds);
 
 							var data = args.format == 'png'? img.toPNG() : img.toJPEG(args.jpegQuality || 90);
@@ -1188,14 +1361,51 @@ function exportDiagram(event, args, directFinalize)
 				}
 				else if (args.format == 'pdf')
 				{
-					contents.printToPDF(pdfOptions).then((data) => 
+					if (args.print)
 					{
-						event.reply('export-success', data);
-					})
-					.catch((error) => 
+						pdfOptions = {
+							scaleFactor: args.pageScale,
+							printBackground: true,
+							pageSize : {
+								width: args.pageWidth * MICRON_TO_PIXEL,
+								//This height adjustment fixes the output. TODO Test more cases
+								height: (args.pageHeight * 1.025) * MICRON_TO_PIXEL
+							},
+							marginsType: 1 // no margin
+						};
+						 
+						contents.print(pdfOptions, (success, errorType) => 
+						{
+							//Consider all as success
+							event.reply('export-success', {});
+						});
+					}
+					else
 					{
-						event.reply('export-error', error);
-					});
+						contents.printToPDF(pdfOptions).then(async (data) => 
+						{
+							pdfs.push(data);
+							to = to > pageCount? pageCount : to;
+							from++;
+							
+							if (from < to)
+							{
+								args.from = from;
+								args.to = from;
+								ipcMain.once('render-finished', renderingFinishHandler);
+								contents.send('render', args);
+							}
+							else
+							{
+								data = await mergePdfs(pdfs, args.embedXml == '1' ? args.xml : null);
+								event.reply('export-success', data);
+							}
+						})
+						.catch((error) => 
+						{
+							event.reply('export-error', error);
+						});
+					}
 				}
 				else if (args.format == 'svg')
 				{
@@ -1210,22 +1420,27 @@ function exportDiagram(event, args, directFinalize)
 				{
 					event.reply('export-error', 'Error: Unsupported format');
 				}
-			});
+			};
+			
+			ipcMain.once('render-finished', renderingFinishHandler);
 
-			contents.send('render', {
-				xml: args.xml,
-				format: args.format,
-				w: args.w,
-				h: args.h,
-				border: args.border || 0,
-				bg: args.bg,
-				"from": args["from"],
-				to: args.to,
-				pageId: args.pageId,
-				allPages: args.allPages,
-				scale: args.scale || 1,
-				extras: args.extras
-			});
+			if (args.format == 'xml')
+			{
+				ipcMain.once('xml-data', (evt, data) =>
+				{
+					event.reply('export-success', data);
+				});
+				
+				ipcMain.once('xml-data-error', () =>
+				{
+					event.reply('export-error');
+				});
+			}
+			
+			args.border = args.border || 0;
+			args.scale = args.scale || 1;
+			
+			contents.send('render', args);
 	    });
 	}
 	catch (e)

@@ -1,3 +1,624 @@
+04-MAY-2021: 14.6.10
+
+- Adds zoomFactor config option
+- Fixes links on custom shapes in Lucid import
+- Adds ctrl/cmd+dblclick to change cell ID
+- Adds containers to general sidebar
+- Fixes pointer events for text shapes
+- Fixes selected style in dark mode
+- Moves Dropbox auth from implicit grant to server-side flow
+- Adds XML option to import menu in minimal and sketch theme
+- Adds Shift+Click on clear waypoints button to clear fixed anchor points
+- Fixes overridden default font in sidebar thumbnails
+- Fixes ignored default styles for shapes dialog and inserted templates
+- Fixes NPE for sketch UI in embed mode
+- Adds enabledChanged event to graph
+- Separates clear waypoints and clear anchor points
+- Disables file API in Opera
+- Fixes anchor points behavior for Choreography shapes in BPMN
+
+29-APR-2021: 14.6.9
+
+- Corrects GitHub app ID
+
+29-APR-2021: 14.6.8
+
+- Refactors GitHub paths
+
+28-APR-2021: 14.6.7
+
+- Switches to server flow for GitHub and Gitlab auth
+
+22-APR-2021: 14.6.6
+
+- Adds dark mode for minimal theme
+
+21-APR-2021: 14.6.5
+
+- Versions shapes minified JS
+
+21-APR-2021: 14.6.4
+
+- Restores BPMN 2.0 shapes
+
+19-APR-2021: 14.6.3
+
+- Fixes for dark mode and sketch theme
+
+19-APR-2021: 14.6.2
+
+- Fixes private Gitlab instance URL parsing
+
+15-APR-2021: 14.6.1
+
+- Improvements to sketch theme
+
+13-APR-2021: 14.6.0
+
+- Updates to workbox 6.1.2
+
+09-APR-2021: 14.5.10
+
+- Internal release
+
+09-APR-2021: 14.5.9
+
+- Improvement to sketch theme
+
+06-APR-2021: 14.5.8
+
+- Fixes Confluence Cloud saving issue
+
+03-APR-2021: 14.5.7
+
+- Add various shapes
+
+02-APR-2021: 14.5.6
+
+- Removes BPMN 2 changes
+
+01-APR-2021: 14.5.5
+
+- Improves BPMN symbols to 2.0 spec
+
+31-MAR-2021: 14.5.4
+
+- Fixes for vsdx export
+- Adds re-tries on cache write failures
+
+26-MAR-2021: 14.5.3
+
+- Internal release
+
+26-MAR-2021: 14.5.2
+
+- Disables copy as image in iframes
+- Fixes find/replace dialog in minimal theme https://github.com/jgraph/drawio/issues/1896
+- Fixes ignored grid for polygon shapes https://github.com/jgraph/drawio/issues/1891
+
+23-MAR-2021: 14.5.1
+
+- Fixes for Electron 12
+
+22-MAR-2021: 14.5.0
+
+- Improves Lucidchart import
+
+17-MAR-2021: 14.4.9
+
+- Adds copy as image option
+- Makes find and replace dialog the default
+
+12-MAR-2021: 14.4.8
+
+- Fixes segment router removing control hints at specific zooms
+
+10-MAR-2021: 14.4.7
+
+- Adds upload option back in embed conf cloud
+
+09-MAR-2021: 14.4.6
+
+- Adds support for linkTarget property
+
+08-MAR-2021: 14.4.5
+
+- Changes find dialog to replace and find
+
+03-MAR-2021: 14.4.4
+
+- Improves Lucidchart import
+
+24-FEB-2021: 14.4.3
+
+- Adds notifications
+
+18-FEB-2021: 14.4.2
+
+- More fixes for aj.draw.io and ac.draw.io lightbox
+
+18-FEB-2021: 14.4.1
+
+- Fixes lightbox for aj.draw.io and ac.draw.io
+
+17-FEB-2021: 14.4.0
+
+- Removes VML support
+- Adds Persian language
+- Forces ac.draw.io and aj.draw.io to embed mode
+
+15-FEB-2021: 14.3.2
+
+- Adds flow animation style
+- Makes grid steps configurable
+- Adds ctrl+drop to insert dropped content as new page
+- Uses app.diagrams.net for editing [DID-1717]
+- Fixes drag and drop for SVG+XML files
+
+11-FEB-2021: 14.3.1
+
+- Adds support for regional direction to back-ends
+- Adds grid option to export dialog
+
+08-FEB-2021: 14.3.0
+
+- Fixes external fonts in PDF export
+- Fixes drag and drop for shapes with shadow
+- Renames page for import into blank diagram
+- Fixes export triggers autosave in embed mode
+
+29-JAN-2021: 14.2.9
+
+- Fixes NPE in minimal mode
+
+29-JAN-2021: 14.2.8
+
+- Adds data governance config
+
+22-JAN-2021: 14.2.7
+
+- Improves Lucidchart import
+
+20-JAN-2021: 14.2.6
+
+- Fixes for OneDrive client flow
+
+19-JAN-2021: 14.2.5
+
+- Add client-side clipping of SVG
+
+15-JAN-2021: 14.2.4
+
+- Improves Lucidchart import
+
+14-JAN-2021: 14.2.3
+
+- Fixes pako encoding issues
+
+13-JAN-2021: 14.2.2
+
+- Fixes decoding of compressed shape files
+
+13-JAN-2021: 14.2.1
+
+- Fixes UInt8Array call stack size exception
+
+13-JAN-2021: 14.2.0
+
+- Disables Trello by default
+- Updates pako to 2.0.3
+
+09-JAN-2021: 14.1.9
+
+- AWS stencil update
+
+02-JAN-2021: 14.1.8
+
+- Internal release
+
+01-JAN-2021: 14.1.7
+
+- Fixes NPE for single point edges
+
+31-DEC-2020: 14.1.6
+
+- Internal release for conf/jira cloud changes
+
+31-DEC-2020: 14.1.5
+
+- Desktop fixes for File API clash
+
+30-DEC-2020: 14.1.4
+
+- Fixes marker rounding errors
+
+28-DEC-2020: 14.1.3
+
+- Internal release
+
+23-DEC-2020: 14.1.2
+
+- Adds UML 2.5 library
+
+18-DEC-2020: 14.1.1
+
+- Fixes Math config
+
+18-DEC-2020: 14.1.0
+
+- Fixes multiple Math initialization
+
+17-DEC-2020: 14.0.5
+
+- Fixes ignored hidden toolbar [1627], settings icon
+- Uses combined configuration file for MathJax
+
+16-DEC-2020: 14.0.4
+
+- Fixes images paths
+
+15-DEC-2020: 14.0.3
+
+- Fixes NPE
+
+15-DEC-2020: 14.0.2
+
+- Improves Lucidchart import
+
+10-DEC-2020: 14.0.1
+
+- Uses minimal UI on iPad Mini and smaller
+- Adds clear.html for clearing caches
+
+09-DEC-2020: 14.0.0
+
+- Internal refactoring of source code
+
+07-DEC-2020: 13.11.0
+
+- Fixes for Confluence Cloud
+
+04-DEC-2020: 13.10.9
+
+- Hardens servlets
+
+03-DEC-2020: 13.10.8
+
+- Reverts UML 2.5 release
+
+03-DEC-2020: 13.10.7
+
+- Improves Lucidchart import
+
+02-DEC-2020: 13.10.6
+
+- Adds auto-crop, origin for visible layers [688]
+- Improves Lucidchart import
+
+01-DEC-2020: 13.10.5
+
+- Uses mxGraph 4.2.3 beta 6
+- Adds page size export option
+
+26-NOV-2020: 13.10.4
+
+- Adds compare button in revision history dialog
+
+25-NOV-2020: 13.10.3
+
+- Uses mxGraph 4.2.3 beta 5
+
+24-NOV-2020: 13.10.2
+
+- Fixes specific synchronize operations
+
+22-NOV-2020: 13.10.1
+
+- Adds File, Embed, Notion
+
+18-NOV-2020: 13.10.0
+
+- Internal release for Github actions testing
+- Conf Cloud: Viewer settings direct from the viewer
+- Conf Cloud: Adds custom libraries to more shapes dialog
+
+15-NOV-2020: 13.9.9
+
+- Improves Lucidchart import
+
+13-NOV-2020: 13.9.8
+
+- Improves Lucidchart import
+
+12-NOV-2020: 13.9.7
+
+- Allows null in init load message
+
+11-NOV-2020: 13.9.6
+
+- Uses GitHub for help and FAQ
+
+11-NOV-2020: 13.9.5
+
+- Fixes license check in Confluence Cloud
+
+11-NOV-2020: 13.9.4
+
+- Adds descriptor to JSON load message
+- Uses mxGraph 4.2.3 beta 4
+
+10-NOV-2020: 13.9.3
+
+- Internal release to update conf cloud manifest
+
+04-NOV-2020: 13.9.2
+
+- Improves Lucidchart import
+- Uses mxGraph 4.2.3 beta 3
+
+04-NOV-2020: 13.9.1
+
+- Improves Lucidchart import
+
+04-NOV-2020: 13.9.0
+
+- Disables Trello in IE11
+- Uses mxGraph 4.2.3 beta 2
+
+03-NOV-2020: 13.8.9
+
+- Adds block overflow cell style
+- Uses mxGraph 4.2.3 beta 1
+
+30-OCT-2020: 13.8.8
+
+- Fixes for teams integration
+- Fixes conf cloud caching issue when 3rd party cookies are disabled
+
+29-OCT-2020: 13.8.7
+
+- Fixes hideDialog order issue on pressing OK
+- Fixes native files in Chrome 86
+
+28-OCT-2020: 13.8.6
+
+- Uses mxGraph 4.2.2
+- Performance improvements for Jira Cloud
+- MS teams integration
+
+27-OCT-2020: 13.8.5
+
+- Fixes possible NPE in Confluence Cloud
+
+27-OCT-2020: 13.8.4
+
+- Performance improvements for Confluence Cloud
+
+26-OCT-2020: 13.8.3
+
+- Gliffy import improvements
+- Updates Spanish translations
+
+24-OCT-2020: 13.8.2
+
+- Lucidchart import improvements
+- Fixes ungrouping action
+- Uses mxGraph 4.2.1 beta 22
+
+20-OCT-2020: 13.8.1
+
+- Lucidchart import improvements
+- Gliffy import improvements
+- Uses mxGraph 4.2.1 beta 21
+
+14-OCT-2020: 13.8.0
+
+- App Engine configuration changes
+- Uses mxGraph 4.2.1 beta 20
+
+08-OCT-2020: 13.7.9
+
+- Fixes script load order for electron
+
+07-OCT-2020: 13.7.8
+
+- Uses mxGraph 4.2.1 beta 19
+- Uses MathJax 2.7.9
+
+30-SEP-2020: 13.7.7
+
+- Updates Finnish translations, credit Arttu Ylhävuori, github.com/areee
+- Updates native File API tokens
+- Lucidchart import improvements
+- Fixes gradient issues in FF
+- Uses mxGraph 4.2.1 beta 18
+
+28-SEP-2020: 13.7.6
+
+- Updates Azure icons
+
+23-SEP-2020: 13.7.5
+
+- Removes document.write for modern browsers
+
+22-SEP-2020: 13.7.4
+
+- Appends splash dialog libs to configured libs
+
+17-SEP-2020: 13.7.3
+
+- Moves viewer to viewer.diagrams.net
+- Improves shape picker position
+- Uses mxGraph 4.2.1 beta 17
+
+16-SEP-2020: 13.7.2
+
+- Removes PWA on draw.io domains
+
+14-SEP-2020: 13.7.1
+
+- Improves Gliffy import
+
+14-SEP-2020: 13.7.0
+
+- Adds conf cloud change notifications for collab
+- Adds Cmd+Click for blue arrow on macOS
+- Uses mxGraph 4.2.1 beta 17
+
+11-SEP-2020: 13.6.10
+
+- Adds Shift+Delete/Backsapce to clear labels
+- Uses mxGraph 4.2.1 beta 16
+
+08-SEP-2020: 13.6.9
+
+- Fixes inline images in cell styles
+
+08-SEP-2020: 13.6.8
+
+- Fixes use of unsupported function in IE
+
+08-SEP-2020: 13.6.7
+
+- Normalizes spaces in uncompressed XML output
+- Adds context menu for shape search results
+- Minor fixes for custom fonts
+- Uses mxGraph 4.2.1 beta 15
+
+31-AUG-2020: 13.6.6
+
+- Removes PWA for www.draw.io
+- Improves Gliffy import
+
+24-AUG-2020: 13.6.5
+
+- Corrects classpath for CacheFacade
+
+20-AUG-2020: 13.6.4
+
+- Adds Shift/Ctrl+Cursor to move/select pages
+- Fixes orientation of screen page formats
+- Adds allowZoomOut switch in GraphViewer
+
+18-AUG-2020: 13.6.3
+
+- Handles extra HTML content on Sharepoint
+- Fixes origin after folding in viewer
+
+08-AUG-2020: 13.6.2
+
+- Fixes origin for online PDF export
+
+07-AUG-2020: 13.6.1
+
+- Improves Lucidchart importer
+- GAE stub fixes
+
+05-AUG-2020: 13.6.0
+
+- Uses mxGraph 4.2.1 beta 14
+- Fixes mouse zoom bug
+
+03-AUG-2020: 13.5.9
+
+- Adds pinch to zoom on Windows and Android
+- Uses mxGraph 4.2.1 beta 13
+
+31-JUL-2020: 13.5.8
+
+- Fixes tooltip for rotation handle
+- Fixes edit as blank in lightbox
+- Lucidchart import improvements
+- Uses mxGraph 4.2.1 beta 12
+- Improves shape picker
+
+30-JUL-2020: 13.5.7
+
+- Faster autosave in Google Drive
+
+30-JUL-2020: 13.5.6
+
+- Uses mxGraph 4.2.1 beta 11
+- Performance improvements
+
+29-JUL-2020: 13.5.5
+
+- Uses mxGraph 4.2.1 beta 10
+- Enables links in tooltips
+- Adds layout JSON action
+
+28-JUL-2020: 13.5.4
+
+- Adds handle for cube and cylinder shape
+- Adds metadata to C4 shapes
+- Uses mxGraph 4.2.1 beta 9
+
+24-JUL-2020: 13.5.3
+
+- Fixes print in static viewer
+
+24-JUL-2020: 13.5.2
+
+- Fixes viewer links
+- Uses mxGraph 4.2.1 beta 8
+
+22-JUL-2020: 13.5.1
+
+- Removes official Azure icons for licensing reasons
+
+22-JUL-2020: 13.5.0
+
+- Restores cloning of rows with blue arrows
+- Fixes ungroup for multiple groups
+- Uses mxGraph 4.2.1 beta 7
+
+20-JUL-2020: 13.4.9
+
+- Fixes handling of built-in plugins
+- Uses mxGraph 4.2.1 beta 6
+
+19-JUL-2020: 13.4.8
+
+- Fixes SHA for inline script
+
+19-JUL-2020: 13.4.7
+
+- Improves target detection for blue arrows
+- Improves shape selection on touch devices
+- Uses mxGraph 4.2.1 beta 5
+
+17-JUL-2020: 13.4.6
+
+- Simplified Start Screen
+
+16-JUL-2020: 13.4.5
+
+- Fixes ignored right meta key on macOS
+
+15-JUL-2020: 13.4.4
+
+- Fixes shape picker container insert
+- Adds diagram styles
+
+14-JUL-2020: 13.4.3
+
+- Adds shape selection on blue arrow click
+
+10-JUL-2020: 13.4.2
+
+- Adds shape selection on double click
+- Fixes browser storage dialog
+
+09-JUL-2020: 13.4.1
+
+- Disables eval in HTML embed code
+
+08-JUL-2020: 13.4.0
+
+- Adds border for lightbox export
+- Uses mxGraph 4.2.1 beta 4
+- Adds Diagram Style panel
+
 04-JUL-2020: 13.3.9
 
 - Fixes ignored autosave for native files

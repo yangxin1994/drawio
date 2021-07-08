@@ -8,33 +8,61 @@
 		var sb = this;
 		var s = 'aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/mscae/';
 		
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeCompanies');
 		this.addMSCAECompaniesPalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeEnterpriseFlat');
 		this.addMSCAEEnterpriseFlatPalette(gn, r, sb);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeIntuneFlat');
 		this.addMSCAEIntuneFlatPalette(gn, r, sb);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeOMSFlat');
 		this.addMSCAEOMSFlatPalette(gn, r, sb);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeSystem CenterFlat');
 		this.addMSCAESystemCenterFlatPalette(gn, r, sb);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeAI and ML Service');
 		this.addMSCAEAIandMLServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeAnalytics Service');
 		this.addMSCAEAnalyticsServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeCompute Service');
 		this.addMSCAEComputeServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeCompute Service VM');
 		this.addMSCAEComputeServiceVMPalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeContainer Service');
 		this.addMSCAEContainerServiceVMPalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeDatabases Service');
 		this.addMSCAEDatabasesServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeDevOps Service');
 		this.addMSCAEDevOpsServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeGeneral Service');
 		this.addMSCAEGeneralServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeIdentity Service');
 		this.addMSCAEIdentityServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeIntegration Service');
 		this.addMSCAEIntegrationServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeInternet of Things Service');
 		this.addMSCAEInternetOfThingsServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeIntune Service');
 		this.addMSCAEIntuneServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeManagement and Governance Service');
 		this.addMSCAEManagementGovernanceServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeManagement and Governance Service Media');
 		this.addMSCAEManagementGovernanceMediaServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeMigrate Service');
 		this.addMSCAEMigrateServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeMixed Reality Service');
 		this.addMSCAEMixedRealityServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeMobile Service');
 		this.addMSCAEMobileServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeNetworking Service');
 		this.addMSCAENetworkingServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeOther Category Service');
 		this.addMSCAEOtherCategoryServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeSecurity Service');
 		this.addMSCAESecurityServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeStorage Service');
 		this.addMSCAEStorageServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary('mscae', 'mscaeWeb Service');
 		this.addMSCAEWebServicePalette(gn, r, sb, s);
+		this.setCurrentSearchEntryLibrary();
 	};
 
 	Sidebar.prototype.addMSCAECompaniesPalette = function(gn, r, sb, s)
@@ -636,9 +664,9 @@
 		var fns =
 		[
 			this.createVertexTemplateEntry(s + 'Analysis_Services.svg;',
-					r * 0.5, r * 0.39, '', 'Analysis_Services', null, null, this.getTagsForStencil(gn, 'analysis services', dt).join(' ')),
+					r * 0.5, r * 0.39, '', 'Analysis Services', null, null, this.getTagsForStencil(gn, 'analysis services', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Azure_Data_Explorer_Clusters.svg;',
-					r * 0.5, r * 0.5, '', 'Azure_Data_Explorer_Clusters', null, null, this.getTagsForStencil(gn, 'azure data explorer clusters', dt).join(' ')),
+					r * 0.5, r * 0.5, '', 'Azure Data Explorer Clusters', null, null, this.getTagsForStencil(gn, 'azure data explorer clusters', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Databricks.svg;',
 					r * 0.5, r * 0.48, '', 'Databricks', null, null, this.getTagsForStencil(gn, 'azure databricks', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Data_Factory.svg;',
@@ -838,7 +866,7 @@
 					r * 0.5, r * 0.5, '', 'Azure DevOps', null, null, this.getTagsForStencil(gn, 'azure devops', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'DevTest_Labs.svg;',
 					r * 0.5, r * 0.5, '', 'Azure DevTest Labs', null, null, this.getTagsForStencil(gn, 'azure devtest labs', dt).join(' ')),
-			this.createVertexTemplateEntry(s + 'Azure_Pipelines	.svg;',
+			this.createVertexTemplateEntry(s + 'Azure_Pipelines.svg;',
 					r * 0.5, r * 0.5, '', 'Azure Pipelines', null, null, this.getTagsForStencil(gn, 'azure pipelines', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Azure_Repos.svg;',
 					r * 0.45, r * 0.5, '', 'Azure Repos', null, null, this.getTagsForStencil(gn, 'azure repos', dt).join(' ')),
@@ -1299,7 +1327,7 @@
 					r * 0.45, r * 0.5, '', 'Virtual Network Gateways', null, null, this.getTagsForStencil(gn, 'vpn gateway gateways virtual private network', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Virtual_Network.svg;',
 					r * 0.5, r * 0.28, '', 'Virtual Networks', null, null, this.getTagsForStencil(gn, 'virtual network networks', dt).join(' ')),
-			this.createVertexTemplateEntry(s + 'aspect=fixed;html=1;perimeter=none;align=center;shadow=0;dashed=0;image;fontSize=12;image=img/lib/mscae/Virtual_WANs.svg;',
+			this.createVertexTemplateEntry(s + 'Virtual_WANs.svg;',
 					r * 0.5, r * 0.5, '', 'Virtual WANs', null, null, this.getTagsForStencil(gn, 'virtual wans wan wide area network networks', dt).join(' '))
 		];
 			
@@ -1391,7 +1419,7 @@
 			this.createVertexTemplateEntry(s + 'AzureFXTEdgeFiler.svg;',
 					r * 0.5, r * 0.5, '', 'AzureFXTEdgeFiler', null, null, this.getTagsForStencil(gn, 'azurefxtedgefiler', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Blog_Storage.svg;',
-					r * 0.5, r * 0.46, '', 'Blog Storage', null, null, this.getTagsForStencil(gn, 'blog storage', dt).join(' ')),
+					r * 0.5, r * 0.46, '', 'Blob Storage', null, null, this.getTagsForStencil(gn, 'blob storage', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Data_Box_Edge_Data_Box_Gateway.svg;',
 					r * 0.5, r * 0.32, '', 'Data Box Edge - Data Box Gateway', null, null, this.getTagsForStencil(gn, 'data box edge data gateway', dt).join(' ')),
 			this.createVertexTemplateEntry(s + 'Data_Box.svg;',

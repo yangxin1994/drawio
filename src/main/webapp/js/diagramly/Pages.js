@@ -711,7 +711,7 @@ Graph.prototype.setViewState = function(state, removeOldExtFonts)
 	{
 		this.view.currentRoot = null;
 		this.view.scale = 1;
-		this.gridEnabled = true;
+		this.gridEnabled = this.defaultGridEnabled;
 		this.gridSize = mxGraph.prototype.gridSize;
 		this.pageScale = mxGraph.prototype.pageScale;
 		this.pageFormat = (typeof mxSettings === 'undefined'? mxGraph.prototype.pageFormat : mxSettings.getPageFormat());
@@ -738,12 +738,17 @@ Graph.prototype.setViewState = function(state, removeOldExtFonts)
 	this.fireEvent(new mxEventObject('viewStateChanged', 'state', state));
 };
 
-//TODO How to make this function secure with no injection??
 Graph.prototype.addExtFont = function(fontName, fontUrl, dontRemember)
 {
 	// KNOWN: Font not added when pasting cells with custom fonts
 	if (fontName && fontUrl)
 	{
+		if (urlParams['ext-fonts'] != '1')
+		{
+			// Adds inserted fonts to font family menu
+			Graph.recentCustomFonts[fontName.toLowerCase()] = {name: fontName, url: fontUrl};
+		}
+		
 		var fontId = 'extFont_' + fontName;
 
 		if (document.getElementById(fontId) == null)
@@ -760,9 +765,8 @@ Graph.prototype.addExtFont = function(fontName, fontUrl, dontRemember)
 				var style = document.createElement('style');
 				
 				style.appendChild(document.createTextNode('@font-face {\n' +
-			            '\tfont-family: "'+ fontName +'";\n' + 
-			            '\tsrc: url("'+ fontUrl +'");\n' + 
-			            '}'));
+					'\tfont-family: "'+ fontName +'";\n' + 
+					'\tsrc: url("'+ fontUrl +'");\n}'));
 				
 				style.setAttribute('id', fontId);
 				var head = document.getElementsByTagName('head')[0];
@@ -1158,7 +1162,7 @@ EditorUi.prototype.updateTabContainer = function()
 		var graph = this.editor.graph;
 		var wrapper = document.createElement('div');
 		wrapper.style.position = 'relative';
-		wrapper.style.display = (mxClient.IS_QUIRKS) ? 'inline' : 'inline-block';
+		wrapper.style.display = 'inline-block';
 		wrapper.style.verticalAlign = 'top';
 		wrapper.style.height = this.tabContainer.style.height;
 		wrapper.style.whiteSpace = 'nowrap';
@@ -1182,7 +1186,7 @@ EditorUi.prototype.updateTabContainer = function()
 				if (this.pages[index] == this.currentPage)
 				{
 					tab.className = 'geActivePage';
-					tab.style.backgroundColor = (uiTheme == 'dark') ? '#2a2a2a' : '#fff';
+					tab.style.backgroundColor = Editor.isDarkMode() ? '#2a2a2a' : '#fff';
 				}
 				else
 				{
@@ -1326,7 +1330,7 @@ EditorUi.prototype.isPageInsertTabVisible = function()
 EditorUi.prototype.createTab = function(hoverEnabled)
 {
 	var tab = document.createElement('div');
-	tab.style.display = (mxClient.IS_QUIRKS) ? 'inline' : 'inline-block';
+	tab.style.display = 'inline-block';
 	tab.style.whiteSpace = 'nowrap';
 	tab.style.boxSizing = 'border-box';
 	tab.style.position = 'relative';
@@ -1335,7 +1339,7 @@ EditorUi.prototype.createTab = function(hoverEnabled)
 	tab.style.marginLeft = '-1px';
 	tab.style.height = this.tabContainer.clientHeight + 'px';
 	tab.style.padding = '12px 4px 8px 4px';
-	tab.style.border = (uiTheme == 'dark') ? '1px solid #505759' : '1px solid #e8eaed';
+	tab.style.border = Editor.isDarkMode() ? '1px solid #505759' : '1px solid #e8eaed';
 	tab.style.borderTopStyle = 'none';
 	tab.style.borderBottomStyle = 'none';
 	tab.style.backgroundColor = this.tabContainer.style.backgroundColor;
@@ -1348,7 +1352,7 @@ EditorUi.prototype.createTab = function(hoverEnabled)
 		{
 			if (!this.editor.graph.isMouseDown)
 			{
-				tab.style.backgroundColor = (uiTheme == 'dark') ? 'black' : '#e8eaed';
+				tab.style.backgroundColor = Editor.isDarkMode() ? 'black' : '#e8eaed';
 				mxEvent.consume(evt);
 			}
 		}));
@@ -1366,9 +1370,9 @@ EditorUi.prototype.createTab = function(hoverEnabled)
 /**
  * Returns true if the given string contains an mxfile.
  */
-EditorUi.prototype.createControlTab = function(paddingTop, html)
+EditorUi.prototype.createControlTab = function(paddingTop, html, hoverEnabled)
 {
-	var tab = this.createTab(true);
+	var tab = this.createTab((hoverEnabled != null) ? hoverEnabled : true);
 	tab.style.lineHeight = this.tabContainerHeight + 'px';
 	tab.style.paddingTop = paddingTop + 'px';
 	tab.style.cursor = 'pointer';
@@ -1386,9 +1390,11 @@ EditorUi.prototype.createControlTab = function(paddingTop, html)
 /**
  * Returns true if the given string contains an mxfile.
  */
-EditorUi.prototype.createPageMenuTab = function()
+EditorUi.prototype.createPageMenuTab = function(hoverEnabled)
 {
-	var tab = this.createControlTab(3, '<div class="geSprite geSprite-dots" style="display:inline-block;margin-top:5px;width:21px;height:21px;"></div>');
+	var tab = this.createControlTab(3, '<div class="geSprite geSprite-dots" ' +
+		'style="display:inline-block;margin-top:5px;width:21px;height:21px;"></div>',
+		hoverEnabled);
 	tab.setAttribute('title', mxResources.get('pages'));
 	tab.style.position = 'absolute';
 	tab.style.marginLeft = '0px';
@@ -1431,20 +1437,21 @@ EditorUi.prototype.createPageMenuTab = function()
 				if (page != null)
 				{
 					menu.addSeparator(parent);
+					var pageName = page.getName();
 	
-					menu.addItem(mxResources.get('delete'), null, mxUtils.bind(this, function()
+					menu.addItem(mxResources.get('removeIt', [pageName]), null, mxUtils.bind(this, function()
 					{
 						this.removePage(page);
 					}), parent);
 					
-					menu.addItem(mxResources.get('rename'), null, mxUtils.bind(this, function()
+					menu.addItem(mxResources.get('renameIt', [pageName]), null, mxUtils.bind(this, function()
 					{
 						this.renamePage(page, page.getName());
 					}), parent);
 
 					menu.addSeparator(parent);
 					
-					menu.addItem(mxResources.get('duplicate'), null, mxUtils.bind(this, function()
+					menu.addItem(mxResources.get('duplicateIt', [pageName]), null, mxUtils.bind(this, function()
 					{
 						this.duplicatePage(page, mxResources.get('copyOf', [page.getName()]));
 					}), parent);
@@ -1589,7 +1596,7 @@ EditorUi.prototype.addTabListeners = function(page, tab)
  * Returns an absolute URL to the given page or null of absolute links
  * to pages are not supported in this file.
  */
-EditorUi.prototype.getLinkForPage = function(page, params)
+EditorUi.prototype.getLinkForPage = function(page, params, lightbox)
 {
 	if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
 	{
@@ -1606,7 +1613,11 @@ EditorUi.prototype.getLinkForPage = function(page, params)
 				search += '&' + params.join('&');
 			}
 			
-			return window.location.protocol + '//' + window.location.host + '/' + search + '#' + file.getHash();
+			return ((lightbox && urlParams['dev'] != '1') ? EditorUi.lightboxHost :
+				(((mxClient.IS_CHROMEAPP || EditorUi.isElectronApp ||
+				!(/.*\.draw\.io$/.test(window.location.hostname))) ?
+				EditorUi.drawHost : 'https://' + window.location.host))) +
+				'/' + search + '#' + file.getHash();
 		}
 	}
 	
@@ -1671,7 +1682,7 @@ EditorUi.prototype.createPageMenu = function(page, label)
 							width: Math.round(bounds.width), height: Math.round(bounds.height), border: 100})));
 					}
 					
-					var dlg = new EmbedDialog(this, this.getLinkForPage(page, params));
+					var dlg = new EmbedDialog(this, this.getLinkForPage(page, params, lightbox));
 					this.showDialog(dlg.container, 440, 240, true, true);
 					dlg.init();
 				}));

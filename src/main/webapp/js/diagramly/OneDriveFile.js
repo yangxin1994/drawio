@@ -13,6 +13,71 @@ OneDriveFile = function(ui, data, meta)
 mxUtils.extend(OneDriveFile, DrawioFile);
 
 /**
+ * Shorter autosave delay for optimistic sync.
+ */
+OneDriveFile.prototype.autosaveDelay = 300;
+
+/**
+ * Translates this point by the given vector.
+ * 
+ * @param {number} dx X-coordinate of the translation.
+ * @param {number} dy Y-coordinate of the translation.
+ */
+OneDriveFile.prototype.share = function()
+{
+	var url = this.meta.webUrl;
+	url = url.substring(0, url.lastIndexOf('/'));
+	
+	if (this.meta.parentReference != null)
+	{
+		try
+		{
+			// Best effort guessing of the web interface URL for the file
+			if (this.meta.parentReference.driveType == 'personal')
+			{
+				url = 'https://onedrive.live.com/?cid=' + encodeURIComponent(this.meta.parentReference.driveId) +
+					'&id=' + encodeURIComponent(this.meta.id);
+			}
+			else if (this.meta.parentReference.driveType == 'documentLibrary')
+			{
+				var path = this.meta.parentReference.path;
+				path = path.substring(path.indexOf('/root:') + 6);
+				
+				var id = this.meta.webUrl;
+				var url = id.substring(0, id.length - path.length - this.meta.name.length - ((path.length > 0) ? 1 : 0)); 
+				id = id.substring(id.indexOf('/', 8));
+				
+				url = url + '/Forms/AllItems.aspx?id=' + id + '&parent=' + id.substring(0, id.lastIndexOf('/'));
+			}
+			else if (this.meta.parentReference.driveType == 'business')
+			{
+				var url = this.meta['@microsoft.graph.downloadUrl'];
+				var idx = url.indexOf('/_layouts/15/download.aspx?');
+			
+				// Strips protocol
+				var id = this.meta.webUrl;
+				var parent = id;
+				
+				id = id.substring(8);
+			
+				// Gets path and parent path
+				id = id.substring(id.indexOf('/'));
+				parent = parent.substring(0, parent.lastIndexOf('/'));
+				parent = parent.substring(parent.indexOf('/', 8))
+				
+				url = url.substring(0, idx) + '/_layouts/15/onedrive.aspx?id=' + id + '&parent=' + parent;
+			}
+		}
+		catch (e)
+		{
+			// ignore
+		}
+	}
+	
+	this.ui.editor.graph.openLink(url);
+};
+
+/**
  * Translates this point by the given vector.
  * 
  * @param {number} dx X-coordinate of the translation.
@@ -103,6 +168,15 @@ OneDriveFile.prototype.getTitle = function()
  * @param {number} dy Y-coordinate of the translation.
  */
 OneDriveFile.prototype.isRenamable = function()
+{
+	return true;
+};
+
+/**
+ * Returns true if the notification to update should be sent
+ * together with the save request.
+ */
+OneDriveFile.prototype.isOptimisticSync = function()
 {
 	return true;
 };
@@ -314,7 +388,8 @@ OneDriveFile.prototype.saveFile = function(title, revision, success, error, unlo
 						(DrawioFile.SYNC == 'manual' || DrawioFile.SYNC == 'auto')) ?
 						this.getCurrentEtag() : null;
 					var lastDesc = this.meta;
-					
+					this.fileSaving();
+
 					this.ui.oneDrive.saveFile(this, mxUtils.bind(this, function(meta, savedData)
 					{
 						// Checks for changes during save

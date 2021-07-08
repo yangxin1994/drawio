@@ -1,5 +1,46 @@
 (function()
 {
+	Sidebar.prototype.addGMDLPalette = function()
+	{
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlBottom Navigation');
+		this.addGMDLBottomNavigationPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlBottom Sheets');
+		this.addGMDLBottomSheetsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlButtons');
+		this.addGMDLButtonsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlCards');
+		this.addGMDLCardsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlChips');
+		this.addGMDLChipsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlDialogs');
+		this.addGMDLDialogsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlDividers');
+		this.addGMDLDividersPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlGrid Lists');
+		this.addGMDLGridListsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlIcons');
+		this.addGMDLIconsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlLists');
+		this.addGMDLListsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlMenus');
+		this.addGMDLMenusPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlMisc');
+		this.addGMDLMiscPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlPickers');
+		this.addGMDLPickersPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlSelection Controls');
+		this.addGMDLSelectionControlsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlSliders');
+		this.addGMDLSlidersPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlSteppers');
+		this.addGMDLSteppersPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlTabs');
+		this.addGMDLTabsPalette();
+		this.setCurrentSearchEntryLibrary('gmdl', 'gmdlText Fields');
+		this.addGMDLTextFieldsPalette();
+		this.setCurrentSearchEntryLibrary();
+	}
+	
 	//Adds Google Media Design shapes
 	Sidebar.prototype.addGMDLBottomNavigationPalette = function(expand)
 	{
@@ -36,7 +77,7 @@
 		var gn = 'mxgraph.gmdl';
 		var dt = 'gmdl google media design library bottom sheets ';
 		var sb = this;
-		
+
 		var fns = [
 			this.addDataEntry(dt + 'bottom sheet', 358, 320, 'Bottom Sheet',
 				'7ZbRbtsgFIafxrcVgbjJLud0Sau12rQ9wETjE4yKwQLSOnv6gSFpFhwJaUsvqiaKxDnnPyfm+4VMQRZtv9K0ax5UDaIgXwqy0ErZsGr7BQhRYMTrgtwUGCP3K/DyTHUyVFFHNUib04BDwzMVWwiZkDB2J2KipqYBL0cFqajgTLr12s0H7RIbJe1P/ttrJ9jFpqGdDzSsrS9zIRZKKD3MIpvh42VWqyfYV6SSEHpr9RL/yQ3YasOf4QeYMN9n4+OCttCf3fKQivtdgWrB6p2TvPDaNkFBynloa4CzJraRyApRExLs0PtK0C0ixHGgJAH6rQPpBTIhe8JqlMkxwJjaeyBgY6MDR4jnyH9PnJnmosPj6PYNEdAuhmUIj8BihFKw/4PrNOH6FaA7i7TtmT9TV6ytxdWTV2bwdfSW02qGqhSyoI8gvivDLVc+rcPuKo+Tr6m4P6m3vK79Mx0En+O8Q8F0dM0lux/m3+C3cewajTh2GcPKxLA7+aj6PMf4IP2wzIeTEc/wZTy7Tjy7pZKprTV5tjVBnWkcWn6aleX7NS73sOF/N26WGPcAxoBk7h2d5Vx7kH8cOi9+w0M3T7xbKcXc3nGV5x0b5L86sTWZ7jls7gr0ft273GvOha+X86H21939Dw=='),
@@ -1508,5 +1549,4 @@
 			}
 		}));
 	};
-
 })();

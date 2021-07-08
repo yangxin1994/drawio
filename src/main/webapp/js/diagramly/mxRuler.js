@@ -19,6 +19,10 @@
 
 function mxRuler(editorUi, unit, isVertical, isSecondery) 
 {
+	var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+                           		window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+	var cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;
+
 	var RULER_THICKNESS = this.RULER_THICKNESS;
     var ruler = this;
     this.unit = unit;
@@ -124,27 +128,26 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
         var scale = graph.view.scale;
         var bgPages = graph.view.getBackgroundPageBounds();
         var t = graph.view.translate;
-        var bounds = graph.view.getGraphBounds();
         var hasPageView = graph.pageVisible;
         
         //The beginning of the ruler (zero)
         var rStart = hasPageView? RULER_THICKNESS + (isVertical? bgPages.y -  graph.container.scrollTop : bgPages.x - graph.container.scrollLeft) 
-        		: RULER_THICKNESS + (isVertical? t.y -  graph.container.scrollTop : t.x - graph.container.scrollLeft);
+        		: RULER_THICKNESS + (isVertical? t.y * scale -  graph.container.scrollTop : t.x * scale - graph.container.scrollLeft);
 
         //handle negative pages
         var pageShift = 0;
         
         if (hasPageView)
         {
+			var layout = graph.getPageLayout();
+	
 	        if (isVertical) 
 	        {
-	            var y = ((bounds.y + 1) / scale - t.y); // + 1 is for overcoming rounding error  
-	            pageShift = Math.floor(y / graph.pageFormat.height) * graph.pageFormat.height * scale;
+	            pageShift = layout.y * graph.pageFormat.height;
 	        }
 	        else
 	        {
-	            var x = ((bounds.x + 1) / scale - t.x); // + 1 is for overcoming rounding error
-	            pageShift = Math.floor(x / graph.pageFormat.width) * graph.pageFormat.width * scale;
+	            pageShift = layout.x * graph.pageFormat.width;
 	        }
         }
         
@@ -197,13 +200,31 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
 	        
 	        if (isVertical)
 	    	{
-	        	ctx.fillRect(0, RULER_THICKNESS, RULER_THICKNESS, rStart - RULER_THICKNESS);
-		        ctx.fillRect(0, rEnd, RULER_THICKNESS, canvas.height);
+				var oh = rStart - RULER_THICKNESS;
+				
+				if (oh > 0)
+				{
+					ctx.fillRect(0, RULER_THICKNESS, RULER_THICKNESS, oh);
+				}
+
+				if (rEnd < canvas.height)
+				{
+					ctx.fillRect(0, rEnd, RULER_THICKNESS, canvas.height);
+				}
 	    	}
 	        else
 	        {
-		        ctx.fillRect(RULER_THICKNESS, 0, rStart - RULER_THICKNESS, RULER_THICKNESS);
-		        ctx.fillRect(rEnd, 0, canvas.width, RULER_THICKNESS);
+				var ow = rStart - RULER_THICKNESS;
+		        
+				if (ow > 0)
+				{
+					ctx.fillRect(RULER_THICKNESS, 0, ow, RULER_THICKNESS);	
+				}
+		        
+				if (rEnd < canvas.width)
+				{
+					ctx.fillRect(rEnd, 0, canvas.width, RULER_THICKNESS);
+				}
 	        }
         }
         
@@ -244,6 +265,25 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
         ctx.fillRect(0, 0, RULER_THICKNESS, RULER_THICKNESS);
     };
     
+	var animationId = -1;
+
+	var listenersDrawRuler = function() 
+	{
+		if (requestAnimationFrame != null)
+		{
+			if (cancelAnimationFrame != null)
+			{
+				cancelAnimationFrame(animationId);	
+			}
+
+			animationId = requestAnimationFrame(drawRuler);
+		}
+		else
+		{
+			drawRuler();
+		}
+	};
+	
 	var sizeListener = function() 
 	{
 	    var div = graph.container;
@@ -256,7 +296,7 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
     		{
 	    		canvas.height = newH;
 	    		container.style.height = newH + 'px';
-	    		drawRuler();
+	    		listenersDrawRuler();
     		}
     	}
 	    else 
@@ -267,19 +307,19 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
     		{
 	    		canvas.width = newW;
 	    		container.style.width = newW + 'px';
-	    		drawRuler();
+	    		listenersDrawRuler();
     		}
     	}
     };
 
-    this.drawRuler = drawRuler;
+    this.drawRuler = listenersDrawRuler;
 
 	var efficientSizeListener = debounce(sizeListener, 10);
 	this.sizeListener = efficientSizeListener;
 	
 	this.pageListener = function()
 	{
-		drawRuler();
+		listenersDrawRuler();
 	};
 	
 	var efficientScrollListener = debounce(function()
@@ -289,7 +329,7 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
 		if (ruler.lastScroll != newScroll)
 		{
 			ruler.lastScroll = newScroll;
-			drawRuler();
+			listenersDrawRuler();
 		}
 	}, 10);
 
@@ -308,6 +348,11 @@ function mxRuler(editorUi, unit, isVertical, isSecondery)
 
     function debounce(func, wait, immediate) 
     {
+		if (requestAnimationFrame != null)
+		{
+			return func;
+		}
+		
         var timeout;
         return function() {
             var context = this, args = arguments;

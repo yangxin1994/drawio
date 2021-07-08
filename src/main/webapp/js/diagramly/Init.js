@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2006-2020, JGraph Ltd
- * Copyright (c) 2006-2020, draw.io AG
+ * Copyright (c) 2006-2021, JGraph Ltd
+ * Copyright (c) 2006-2021, draw.io AG
  */
 
 // urlParams is null when used for embedding
@@ -13,24 +13,29 @@ window.isLocalStorage = window.isLocalStorage || false;
 window.mxLoadSettings = window.mxLoadSettings || urlParams['configure'] != '1';
 
 // Checks for SVG support
-window.isSvgBrowser = window.isSvgBrowser || navigator.userAgent == null ||
-	navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 9;
+window.isSvgBrowser = true;
 
 // CUSTOM_PARAMETERS - URLs for save and export
-window.DRAWIO_BASE_URL = window.DRAWIO_BASE_URL || ((/.*\.draw\.io$/.test(window.location.hostname)) ?
+window.DRAWIO_BASE_URL = window.DRAWIO_BASE_URL || ((/.*\.draw\.io$/.test(window.location.hostname)) || (/.*\.diagrams\.net$/.test(window.location.hostname)) ?
 	window.location.protocol + '//' + window.location.hostname : 'https://app.diagrams.net');
-window.EXPORT_URL = window.EXPORT_URL || 'https://exp.draw.io/ImageExport4/export';
+window.DRAWIO_LIGHTBOX_URL = window.DRAWIO_LIGHTBOX_URL || 'https://viewer.diagrams.net';
+window.EXPORT_URL = window.EXPORT_URL || 'https://convert.diagrams.net/node/export';
 window.PLANT_URL = window.PLANT_URL || 'https://plant-aws.diagrams.net';
 window.DRAW_MATH_URL = window.DRAW_MATH_URL || window.DRAWIO_BASE_URL + '/math';
-window.VSD_CONVERT_URL = window.VSD_CONVERT_URL || 'https://convert.draw.io/VsdConverter/api/converter';
-window.EMF_CONVERT_URL = window.EMF_CONVERT_URL || 'https://convert.draw.io/emf2png/convertEMF';
+window.VSD_CONVERT_URL = window.VSD_CONVERT_URL || 'https://convert.diagrams.net/VsdConverter/api/converter';
+window.EMF_CONVERT_URL = window.EMF_CONVERT_URL || 'https://convert.diagrams.net/emf2png/convertEMF';
 window.REALTIME_URL = window.REALTIME_URL || 'cache';
 window.DRAWIO_GITLAB_URL = window.DRAWIO_GITLAB_URL || 'https://gitlab.com';
-window.DRAWIO_GITLAB_ID = window.DRAWIO_GITLAB_ID || '5cdc018a32acddf6eba37592d9374945241e644b8368af847422d74c8709bc44';
+window.DRAWIO_GITLAB_ID = window.DRAWIO_GITLAB_ID || 'c9b9d3fcdce2dec7abe3ab21ad8123d89ac272abb7d0883f08923043e80f3e36';
+window.DRAWIO_GITHUB_URL = window.DRAWIO_GITHUB_URL || 'https://github.com';
+window.DRAWIO_GITHUB_API_URL = window.DRAWIO_GITHUB_API_URL || 'https://api.github.com';
+window.DRAWIO_GITHUB_ID = window.DRAWIO_GITHUB_ID || '4f88e2ec436d76c2ee6e';
+window.DRAWIO_DROPBOX_ID = window.DRAWIO_DROPBOX_ID || 'libwls2fa9szdji';
 window.SAVE_URL = window.SAVE_URL || 'save';
 window.OPEN_URL = window.OPEN_URL || 'import';
 window.PROXY_URL = window.PROXY_URL || 'proxy';
 window.DRAWIO_VIEWER_URL = window.DRAWIO_VIEWER_URL || null;
+window.NOTIFICATIONS_URL = window.NOTIFICATIONS_URL || 'https://www.draw.io/notifications';
 
 // Paths and files
 window.SHAPES_PATH = window.SHAPES_PATH || 'shapes';
@@ -75,6 +80,23 @@ window.mxLanguage = window.mxLanguage || (function()
 				{
 					lang = JSON.parse(value).language || null;
 				}
+				
+				if (!lang && window.mxIsElectron)
+				{
+					lang = require('electron').remote.app.getLocale();
+					
+					if (lang != null)
+			    	{
+			    		var dash = lang.indexOf('-');
+			    		
+			    		if (dash >= 0)
+			    		{
+			    			lang = lang.substring(0, dash);
+			    		}
+			    		
+			    		lang = lang.toLowerCase();
+			    	}
+				}
 			}
 			catch (e)
 			{
@@ -104,7 +126,7 @@ window.mxLanguageMap = window.mxLanguageMap ||
 	'et' : 'Eesti',
 	'en' : 'English',
 	'es' : 'Español',
-	'eu' : 'Euskadi',
+	'eu' : 'Euskara',
 	'fil' : 'Filipino',
 	'fr' : 'Français',
 	'gl' : 'Galego',
@@ -126,6 +148,7 @@ window.mxLanguageMap = window.mxLanguageMap ||
 	'uk' : 'Українська',
 	'he' : 'עברית',
 	'ar' : 'العربية',
+	'fa' : 'فارسی',
 	'th' : 'ไทย',
 	'ko' : '한국어',
 	'ja' : '日本語',
@@ -136,6 +159,7 @@ window.mxLanguageMap = window.mxLanguageMap ||
 if (typeof window.mxBasePath === 'undefined')
 {
 	window.mxBasePath = 'mxgraph';
+	window.mxImageBasePath = 'mxgraph/images';
 }
 
 if (window.mxLanguages == null)
@@ -154,35 +178,56 @@ if (window.mxLanguages == null)
 	}
 }
 
+// Uses lightbox mode on viewer domain
+if (window.location.hostname == DRAWIO_LIGHTBOX_URL.substring(DRAWIO_LIGHTBOX_URL.indexOf('//') + 2))
+{
+	urlParams['lightbox'] = '1';
+}	
+
+// Lightbox enables chromeless mode
+if (urlParams['lightbox'] == '1')
+{
+	urlParams['chrome'] = '0';
+}
+
 /**
- * Returns the global UI setting before runngin static draw.io code
+ * Returns the global UI setting before running static draw.io code
  */
 window.uiTheme = window.uiTheme || (function() 
 {
 	var ui = urlParams['ui'];
 
 	// Known issue: No JSON object at this point in quirks in IE8
-	if (ui == null && typeof JSON !== 'undefined')
+	if (ui == null && isLocalStorage && typeof JSON !== 'undefined' && urlParams['lightbox'] != '1')
 	{
-		// Cannot use mxSettings here
-		if (isLocalStorage) 
+		try
 		{
-			try
+			var value = localStorage.getItem('.drawio-config');
+			
+			if (value != null)
 			{
-				var value = localStorage.getItem('.drawio-config');
-				
-				if (value != null)
-				{
-					ui = JSON.parse(value).ui || null;
-				}
-			}
-			catch (e)
-			{
-				// cookies are disabled, attempts to use local storage will cause
-				// a DOM error at a minimum on Chrome
-				isLocalStorage = false;
+				ui = JSON.parse(value).ui || null;
 			}
 		}
+		catch (e)
+		{
+			// cookies are disabled, attempts to use local storage will cause
+			// a DOM error at a minimum on Chrome
+			isLocalStorage = false;
+		}
+	}
+	
+	//Use Sketch theme for MS Teams (and any future extAuth) by default
+	if (ui == null && urlParams['extAuth'] == '1')
+	{
+		ui = 'sketch';
+	}
+	
+	// Redirects sketch UI to min UI with sketch URL parameter
+	if (ui == 'sketch')
+	{
+		urlParams['sketch'] = '1';
+		ui = 'min';
 	}
 	
 	// Uses minimal theme on small screens
@@ -192,7 +237,7 @@ window.uiTheme = window.uiTheme || (function()
 		{
 	        var iw = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 
-	        if (iw <= 414)
+	        if (iw <= 768)
 	        {
 	        	ui = 'min';
 	        }
@@ -320,7 +365,8 @@ function setCurrentXml(data, filename)
 })();
 
 // Enables offline mode
-if (urlParams['offline'] == '1' || urlParams['demo'] == '1' || urlParams['stealth'] == '1' || urlParams['local'] == '1')
+if (urlParams['offline'] == '1' || urlParams['demo'] == '1' || 
+		urlParams['stealth'] == '1' || urlParams['local'] == '1' || urlParams['lockdown'] == '1')
 {
 	urlParams['picker'] = '0';
 	urlParams['gapi'] = '0';
@@ -331,23 +377,17 @@ if (urlParams['offline'] == '1' || urlParams['demo'] == '1' || urlParams['stealt
 	urlParams['tr'] = '0';
 }
 
+// Disables Trello client by default
+if (urlParams['mode'] == 'trello')
+{
+	urlParams['tr'] = '1';
+}
+
 // Uses embed mode on embed domain
 if (window.location.hostname == 'embed.diagrams.net')
 {
 	urlParams['embed'] = '1';
 }	
-
-// Disables math in offline mode
-if (urlParams['offline'] == '1' || urlParams['local'] == '1')
-{
-	urlParams['math'] = '0';
-}
-
-// Lightbox enables chromeless mode
-if (urlParams['lightbox'] == '1')
-{
-	urlParams['chrome'] = '0';
-}
 
 // Fallback for cases where the hash property is not available
 if ((window.location.hash == null || window.location.hash.length <= 1) &&
